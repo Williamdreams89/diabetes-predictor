@@ -14,7 +14,7 @@ BASE_DIR = Path(__file__).resolve(strict=True).parent
 
 print(BASE_DIR)
 
-with open(f"{BASE_DIR}/diabetes_pred_model-{__version__}.pkl", "rb") as f:
+with open(f"{BASE_DIR}/diabetes_pred_model-{__version__}.sav", "rb") as f:
     model = pickle.load(f)
 
 
@@ -39,7 +39,7 @@ def home():
 
 @app.post("/predict" )
 def predict(input_parameters: ModelInputParams):
-    input_data = input_parameters.model_dump_json()
+    input_data = input_parameters.json()
     input_dict = json.loads(input_data)
     pregnant = input_dict['pregnant']
     glucose = input_dict['glucose']
@@ -49,19 +49,11 @@ def predict(input_parameters: ModelInputParams):
     mass = input_dict['mass']
     pedigree = input_dict['pedigree']
     age = input_dict['age']
+    
     input_list = (pregnant, glucose, pressure, triceps, insulin, mass, pedigree, age)
-
-    # Taking an input data for prediction from the users 
-
-    # Convert the input data as np array
-    input_data_array = np.asarray(input_list)
-
-    # Reshape the data since we are only predicting for a single instance
-    reshaped_input_data = input_data_array.reshape(1, -1)
-
-    # transform data into std data
-    std_data = StandardScaler().transform(reshaped_input_data)
-
+    input_data_as_array = np.asarray(input_list)
+    reshaped_input_data = input_data_as_array.reshape(1, -1)
+    std_data = StandardScaler().fit_transform(reshaped_input_data)
     prediction_outcome = model.predict(std_data)
 
     if prediction_outcome[0]==0:
